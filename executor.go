@@ -21,7 +21,7 @@ func executor(workdir string, outputFifoPath string, args []string) error {
 	<-signal
 
 	err := proc.Start()
-	fatal_if(err)
+	fatalIf(err)
 
 	// wait for pipeline exit
 	<-signal
@@ -41,10 +41,10 @@ func executor(workdir string, outputFifoPath string, args []string) error {
 func startPipeline(proc *exec.Cmd, outputFifo *os.File, signal chan bool) {
 	// some commands expect stdin to be connected
 	cmdInput, err := proc.StdinPipe()
-	fatal_if(err)
+	fatalIf(err)
 
 	cmdOutput, err := proc.StdoutPipe()
-	fatal_if(err)
+	fatalIf(err)
 
 	logger.Println("Starting pipeline")
 

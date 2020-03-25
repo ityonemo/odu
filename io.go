@@ -56,7 +56,7 @@ func startInputConsumer(stdin io.Reader, pipe io.WriteCloser) {
 			if readErr == io.EOF && bytesRead == 0 {
 				return
 			}
-			fatal_if(readErr)
+			fatalIf(readErr)
 
 			length := read16Be(buf)
 			// logger.Printf("[cmd_in] read packet length = %v\n", length)
