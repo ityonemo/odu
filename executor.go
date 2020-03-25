@@ -6,20 +6,16 @@ import (
 	"time"
 )
 
-func executor(workdir string, inputFifoPath string, outputFifoPath string, args []string) error {
-	const stdoutMarker = 0x00
-	// const stderrMarker = 0x01
-
+func executor(workdir string, outputFifoPath string, args []string) error {
 	proc := exec.Command(args[0], args[1:]...)
 	proc.Dir = workdir
 
 	logger.Printf("Command path: %v\n", proc.Path)
 
-	inputFifo := openFifo(inputFifoPath, os.O_RDONLY)
 	outputFifo := openFifo(outputFifoPath, os.O_WRONLY)
 
 	signal := make(chan bool)
-	go startPipeline(proc, inputFifo, outputFifo, signal)
+	go startPipeline(proc, outputFifo, signal)
 
 	// wait pipeline to start
 	<-signal
@@ -42,7 +38,7 @@ func executor(workdir string, inputFifoPath string, outputFifoPath string, args 
 	return err
 }
 
-func startPipeline(proc *exec.Cmd, inputFifo *os.File, outputFifo *os.File, signal chan bool) {
+func startPipeline(proc *exec.Cmd, outputFifo *os.File, signal chan bool) {
 	// some commands expect stdin to be connected
 	cmdInput, err := proc.StdinPipe()
 	fatal_if(err)
@@ -52,7 +48,7 @@ func startPipeline(proc *exec.Cmd, inputFifo *os.File, outputFifo *os.File, sign
 
 	logger.Println("Starting pipeline")
 
-	startInputConsumer(cmdInput, inputFifo)
+	startInputConsumer(os.Stdin, cmdInput)
 	outputStreamerExit := startOutputStreamer(cmdOutput, outputFifo)
 
 	// signal that pipline is setup
@@ -60,9 +56,6 @@ func startPipeline(proc *exec.Cmd, inputFifo *os.File, outputFifo *os.File, sign
 
 	// wait for pipline to exit
 	<-outputStreamerExit
-
-	cmdOutput.Close()
-	cmdInput.Close()
 
 	// signal pipeline shutdown
 	signal <- true

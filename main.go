@@ -12,7 +12,6 @@ const usage = "Usage: odu [options] -- <program> [<arg>...]"
 
 var dirFlag = flag.String("dir", ".", "working directory for the spawned process")
 var logFlag = flag.String("log", "", "enable logging")
-var inputFlag = flag.String("input", "", "path to input fifo")
 var outputFlag = flag.String("output", "", "path to output fifo")
 var versionFlag = flag.Bool("v", false, "print version and exit")
 
@@ -28,16 +27,12 @@ func main() {
 		die_usage("output is not a pipe")
 	}
 
-	if pipeExists(*inputFlag) {
-		die_usage("input is not a pipe")
-	}
-
 	initLogger(*logFlag)
 
 	args := flag.Args()
 	validateArgs(args)
 
-	err := executor(*dirFlag, *inputFlag, *outputFlag, args)
+	err := executor(*dirFlag, *outputFlag, args)
 	if err != nil {
 		os.Exit(getExitStatus(err))
 	}
